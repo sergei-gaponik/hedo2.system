@@ -1,0 +1,37 @@
+{
+  "name": "system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/app.ts",
+  "scripts": {
+    "watch": "tsc -w",
+    "start": "ts-node src/app.ts",
+    "inspect": "node --inspect -r ts-node/register src/app.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sergei-gaponik/hedo2.system.git"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "homepage": "https://github.com/sergei-gaponik/hedo2.system#readme",
+  "dependencies": {
+    "@graphql-tools/merge": "^6.2.10",
+    "@sergei-gaponik/hedo2.lib.models": "^1.1.4",
+    "@typegoose/typegoose": "^7.6.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "express-graphql": "0.12.0",
+    "graphql": "15.5.0",
+    "module-alias": "^2.2.2",
+    "mongoose": "^5.10.18",
+    "reflect-metadata": "^0.1.13",
+    "type-graphql": "1.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.35"
+  },
+  "_moduleAliases": {
+    "@sergei-gaponik/hedo2.lib.models": "../_lib/models/dist/app.js"
+  }
+}
