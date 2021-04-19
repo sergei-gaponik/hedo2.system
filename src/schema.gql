@@ -3,26 +3,285 @@
 # !!!   DO NOT MODIFY THIS FILE BY YOURSELF   !!!
 # -----------------------------------------------
 
+type Asset {
+  _id: String!
+  src: String!
+  type: MIMEType!
+}
+
+input AssetFilter {
+  _id: String
+  src: String
+  type: MIMEType
+}
+
+input AssetInput {
+  src: String
+  type: MIMEType
+}
+
+enum CreateAssetError {
+  databaseError
+  duplicateSrc
+}
+
+type CreateAssetResponse {
+  asset: Asset
+  errors: [CreateAssetError!]
+}
+
+enum CreateInventoryItemError {
+  costCantBeNegative
+  databaseError
+  duplicateEAN
+  quantityCantBeNegative
+}
+
+type CreateInventoryItemResponse {
+  errors: [CreateInventoryItemError!]
+  inventoryItem: InventoryItem
+}
+
+enum CreateProductError {
+  databaseError
+}
+
+type CreateProductResponse {
+  errors: [CreateProductError!]
+  product: Product
+}
+
+enum CreateVariantError {
+  databaseError
+  variantNotFound
+}
+
+type CreateVariantResponse {
+  errors: [CreateVariantError!]
+  variant: Variant
+}
+
+enum DeleteAssetError {
+  databaseError
+}
+
+type DeleteAssetsResponse {
+  deletedCount: Float
+  errors: [DeleteAssetError!]
+  nModified: Float
+}
+
+enum DeleteInventoryItemError {
+  databaseError
+}
+
+type DeleteInventoryItemsResponse {
+  deletedCount: Float
+  errors: [DeleteInventoryItemError!]
+  nModified: Float
+}
+
+enum DeleteProductsError {
+  databaseError
+}
+
+type DeleteProductsResponse {
+  deletedCount: Float
+  errors: [DeleteProductsError!]
+  nModified: Float
+}
+
+enum DeleteVariantsError {
+  databaseError
+}
+
+type DeleteVariantsResponse {
+  deletedCount: Float
+  errors: [DeleteVariantsError!]
+  nModified: Float
+}
+
 type InventoryItem {
-  cost: Float!
+  _id: String!
+  cost: Float
   ean: String!
   quantity: Float!
   title: String!
 }
 
+input InventoryItemFilter {
+  _id: String
+  cost: Float
+  ean: String
+  quantity: Float
+  title: String
+}
+
+input InventoryItemInput {
+  cost: Float
+  ean: String
+  quantity: Float
+  title: String
+}
+
+enum MIMEType {
+  application_json
+  application_pdf
+  application_xml
+  audio_mpeg
+  audio_wav
+  image_jpeg
+  image_png
+  text_css
+  text_csv
+  text_html
+  video_mpeg
+}
+
 type Mutation {
-  setInventoryItemQuantity(absolute: Float, relative: Float): SetInventoryItemQuantityResponse!
+  createAsset(input: AssetInput!): CreateAssetResponse!
+  createInventoryItem(input: InventoryItemInput!): CreateInventoryItemResponse!
+  createProduct(input: ProductInput!): CreateProductResponse!
+  createVariant(input: VariantInput!): CreateVariantResponse!
+  deleteAssets(
+    """removes all references to this item"""
+    clean: Boolean
+    filter: AssetFilter!
+  ): DeleteAssetsResponse!
+  deleteInventoryItems(
+    """removes all references to this item"""
+    clean: Boolean
+    filter: InventoryItemFilter!
+  ): DeleteInventoryItemsResponse!
+  deleteProducts(
+    """removes all references to this item"""
+    clean: Boolean
+    filter: ProductFilter!
+  ): DeleteProductsResponse!
+  deleteVariants(
+    """removes all references to this item"""
+    clean: Boolean
+    filter: VariantFilter!
+  ): DeleteVariantsResponse!
+  setInventoryItemQuantity(
+    amount: Float!
+    ean: String!
+
+    """if set to true new quantity will be calculated relative to old"""
+    relative: Boolean
+  ): SetInventoryItemQuantityResponse!
+  updateAsset(input: AssetInput!, objectId: String!): UpdateAssetResponse!
+
+  """ean | objectId; use setInventoryItemQuantity for inventory changes!"""
+  updateInventoryItem(ean: String, input: InventoryItemInput!, objectId: String): UpdateInventoryItemResponse!
+  updateProduct(input: ProductInput!, objectId: String!): UpdateProductResponse!
+  updateVariant(input: VariantInput!, objectId: String!): UpdateVariantResponse!
+}
+
+type Product {
+  _id: String!
+  description: String!
+  images: [Asset!]!
+  title: String!
+  variants: [Variant!]!
+}
+
+input ProductFilter {
+  _id: String
+  description: String
+  images: [String!]
+  title: String
+
+  """array of variant ObjectIds"""
+  variants: [String!]
+}
+
+input ProductInput {
+  description: String
+  images: [String!]
+  title: String
+
+  """array of variant ObjectIds"""
+  variants: [String!]
 }
 
 type Query {
-  inventoryItems: [InventoryItem!]!
+  asset(filter: AssetFilter!): Asset
+  assets(filter: AssetFilter, limit: Float, page: Float): [Asset!]
+  inventoryItem(filter: InventoryItemFilter!): InventoryItem
+  inventoryItems(filter: InventoryItemFilter, limit: Float, page: Float): [InventoryItem!]
+  product(dereference: Boolean, filter: ProductFilter!): Product
+  products(dereference: Boolean, filter: ProductFilter, limit: Float, page: Float): [Product!]
+  variant(dereference: Boolean, filter: VariantFilter!): Variant
+  variants(dereference: Boolean, filter: VariantFilter, limit: Float, page: Float): [Variant!]
 }
 
 enum SetInventoryItemQuantityError {
-  error1
+  databaseError
+  newQuantityCantBeNegative
 }
 
 type SetInventoryItemQuantityResponse {
-  errors: [SetInventoryItemQuantityError!]!
-  inventoryItem: InventoryItem!
+  errors: [SetInventoryItemQuantityError!]
+  updatedQuantity: Float
+}
+
+enum UpdateAssetError {
+  databaseError
+  itemNotFound
+}
+
+type UpdateAssetResponse {
+  errors: [UpdateAssetError!]
+}
+
+enum UpdateInventoryItemError {
+  costCantBeNegative
+  databaseError
+  itemNotFound
+  notEnoughParameters
+  quantityCantBeNegative
+  tooManyParameters
+}
+
+type UpdateInventoryItemResponse {
+  errors: [UpdateInventoryItemError!]
+}
+
+enum UpdateProductError {
+  databaseError
+  itemNotFound
+}
+
+type UpdateProductResponse {
+  errors: [UpdateProductError!]
+}
+
+enum UpdateVariantError {
+  databaseError
+  itemNotFound
+}
+
+type UpdateVariantResponse {
+  errors: [UpdateVariantError!]
+}
+
+type Variant {
+  _id: String!
+  images: [Asset!]!
+  inventoryItems: [InventoryItem!]!
+  title: String!
+}
+
+input VariantFilter {
+  _id: String
+  images: [String!]
+  inventoryItems: [String!]
+  title: String
+}
+
+input VariantInput {
+  images: [String!]
+  inventoryItems: [String!]
+  title: String
 }

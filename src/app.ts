@@ -4,42 +4,54 @@ require("dotenv").config()
 
 import * as Mongoose from 'mongoose'
 import * as express from 'express'
-import InventoryResolver from './inventory/InventoryResolver'
-import { graphqlHTTP } from 'express-graphql'
-import { buildSchema } from 'type-graphql'
-import Models from '@sergei-gaponik/hedo2.lib.models'
-import { TypegooseMiddleware } from './util/TypegooseMiddleware'
+import { ApolloServer } from "apollo-server-express";
+import { createClient } from 'redis'
 import * as path from 'path'
+import * as https from 'https'
+import * as fs from 'fs'
+
+import { setContext } from '@sergei-gaponik/hedo2.lib.models'
+import getApolloOptions from './core/getApolloOptions'
+import { MONGODB_MAIN, PORT, PRODUCTION } from './core/const'
 
 async function main() {
 
-  const { MONGODB_HOST, MONGODB_NAME, PORT, NODE_ENV } = process.env
+  console.log("connecting to mongodb...")
 
-  const PRODUCTION = NODE_ENV == "production"
-
-  await Mongoose.connect(MONGODB_HOST, {
+  const mongooseOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    dbName: MONGODB_NAME
+    autoIndex: false
+  }
+
+
+  const mongoose = await Mongoose.connect(MONGODB_MAIN, mongooseOptions)
+
+  console.log("connecting to redis...")
+
+  const redisClient = createClient()
+
+  setContext({ 
+    mongoose,
+    redisClient,
+    env: process.env
   })
 
   if(!PRODUCTION) Mongoose.set('debug', true);
+  console.log("initializing graphql...")
 
+  const apolloOptions = await getApolloOptions()
+  const apolloServer = new ApolloServer(apolloOptions)
   const app = express()
 
-  app.use(graphqlHTTP({ 
-    schema: await buildSchema({ 
-      resolvers: [
-        InventoryResolver, 
-        Models.InventoryItemResolver
-      ],
-      globalMiddlewares: [TypegooseMiddleware],
-      emitSchemaFile: path.resolve(__dirname, "schema.gql")
-    }), 
-    graphiql: true 
-  }))
+  apolloServer.applyMiddleware({ app });
 
-  app.listen(PORT, () => console.log(`app running on port ${PORT}`))
+  const sslApp = https.createServer({
+    key: fs.readFileSync(path.join(__dirname, '../.ssl/localhost-key.pem')),
+    cert: fs.readFileSync(path.join(__dirname, '../.ssl/localhost.pem'))
+  }, app)
+
+  sslApp.listen(PORT, () => console.log(`app running on port ${PORT}`))
 }
 
 main()

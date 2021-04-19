@@ -1,0 +1,17 @@
+
+
+const { 
+  MONGODB_MAIN, 
+  PORT, 
+  NODE_ENV,
+  OPENEXCHANGERATES_APPID
+} = process.env
+
+const PRODUCTION = NODE_ENV == "production"
+
+export {
+  MONGODB_MAIN,
+  PORT,
+  PRODUCTION,
+  OPENEXCHANGERATES_APPID
+}
