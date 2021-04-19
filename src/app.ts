@@ -24,7 +24,6 @@ async function main() {
     autoIndex: false
   }
 
-
   const mongoose = await Mongoose.connect(MONGODB_MAIN, mongooseOptions)
 
   console.log("connecting to redis...")
