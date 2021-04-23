@@ -43,7 +43,7 @@ const getRegional = () => {
 const getInventoryItemTotals = (inventoryItems, q) => {
   return [...new Array(randInt(q))].map(() => ({
     inventoryItem: getRandomReference(inventoryItems),
-    quantity: randInt(2)
+    quantity: randInt(2) + 1
   }))
 }
 
@@ -82,7 +82,8 @@ async function createDummyVariants(amount: number){
     dummies.push({
       title: `variant ${i}`,
       items: getInventoryItemTotals(inventoryItems, 3),
-      images: getRandomReferences(assets, 3)
+      images: getRandomReferences(assets, 3),
+      availableQuantity: 0
     })
     
   }
@@ -101,7 +102,7 @@ async function createDummyInventoryItems(amount: number){
       title: `item ${i}`,
       ean: randInt(10000000000).toString().padStart(10, "0"),
       cost: getRandomPrice(),
-      quantity: randInt(10)
+      availableQuantity: randInt(10)
     })
   }
 
@@ -241,6 +242,7 @@ async function createDummyOrders(amount: number){
 
 
 async function dropAndPopulate(){
+
   await Models.InventoryItemModel().deleteMany({})
   await Models.AssetModel().deleteMany({})
   await Models.VariantModel().deleteMany({})
@@ -249,6 +251,7 @@ async function dropAndPopulate(){
   await Models.SessionModel().deleteMany({})
   await Models.PaymentModel().deleteMany({})
   await Models.OrderModel().deleteMany({})
+
   await createDummyInventoryItems(1000)
   await createDummyAssets(500)
   await createDummyVariants(800)
@@ -258,6 +261,8 @@ async function dropAndPopulate(){
   await createDummyPayments(300)
   await createDummyOrders(300)
   await createDummyUsers(30)
+
+  process.exit()
 }
 
 export {

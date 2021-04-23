@@ -1,9 +1,11 @@
 import { Arg, Field, Mutation, ObjectType, Resolver, registerEnumType } from "type-graphql"
-import * as Models from '@sergei-gaponik/hedo2.lib.models'
+import { InventoryItemModel } from '@sergei-gaponik/hedo2.lib.models'
+import updateVariants from "./updateVariants"
 
 enum SetInventoryItemQuantityError {
   databaseError,
-  newQuantityCantBeNegative
+  newQuantityCantBeNegative,
+  tooManyArguments
 }
 
 registerEnumType(SetInventoryItemQuantityError, { name: "SetInventoryItemQuantityError" })
@@ -28,12 +30,16 @@ export default class InventoryResolver {
       nullable: true, 
       description: "if set to true new quantity will be calculated relative to old" 
     }) relative: boolean = false,
-    @Arg("ean") ean: string,
+    @Arg("ean", { nullable: true }) ean: string,
+    @Arg("_id", { nullable: true }) _id: string,
     @Arg("quantity") quantity: number
   ): Promise<SetInventoryItemQuantityResponse> {
 
     let response = new SetInventoryItemQuantityResponse()
     let errors = []
+
+    if(ean && _id)
+      errors.push(SetInventoryItemQuantityError.tooManyArguments)
 
     if(!relative && quantity < 0)
       errors.push(SetInventoryItemQuantityError.newQuantityCantBeNegative)
@@ -44,24 +50,26 @@ export default class InventoryResolver {
     }
 
     try{
-      const filter = { ean }
+      const filter = ean ? { ean } : { _id }
       const update = relative
-        ? { $inc: { quantity }}
-        : { $set: { quantity } }
+        ? { $inc: { availableQuantity: quantity }}
+        : { $set: { availableQuantity: quantity } }
       const options = { new: true }
 
-      const item = await Models.InventoryItemModel().findOneAndUpdate(filter, update, options)
+      const item = await InventoryItemModel().findOneAndUpdate(filter, update, options)
 
-      if(item.quantity < 0){
+      if(item.availableQuantity < 0){
 
-        const undo = { $inc: { quantity: -quantity } }
+        const undo = { $inc: { availableQuantity: -quantity } }
 
-        await Models.InventoryItemModel().findOneAndUpdate(filter, undo)
+        await InventoryItemModel().findOneAndUpdate(filter, undo)
 
         response.errors = [ SetInventoryItemQuantityError.newQuantityCantBeNegative ]
       }
       else {
-        response.updatedQuantity = item.quantity
+        updateVariants(item._id)
+
+        response.updatedQuantity = item.availableQuantity
       }
     }
     catch(e){

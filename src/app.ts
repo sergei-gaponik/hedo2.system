@@ -37,6 +37,9 @@ async function main() {
     env: process.env
   })
 
+  // dropAndPopulate()
+  // return;
+
   if(!PRODUCTION) Mongoose.set('debug', true);
   console.log("initializing graphql...")
 
