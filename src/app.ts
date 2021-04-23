@@ -10,6 +10,7 @@ import * as path from 'path'
 import * as https from 'https'
 import * as fs from 'fs'
 
+import { dropAndPopulate } from './testing/MockProducer'
 import { setContext } from '@sergei-gaponik/hedo2.lib.models'
 import getApolloOptions from './core/getApolloOptions'
 import { MONGODB_MAIN, PORT, PRODUCTION } from './core/const'

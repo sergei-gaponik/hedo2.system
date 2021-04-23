@@ -29,13 +29,13 @@ export default class InventoryResolver {
       description: "if set to true new quantity will be calculated relative to old" 
     }) relative: boolean = false,
     @Arg("ean") ean: string,
-    @Arg("amount") amount: number
+    @Arg("quantity") quantity: number
   ): Promise<SetInventoryItemQuantityResponse> {
 
     let response = new SetInventoryItemQuantityResponse()
     let errors = []
 
-    if(!relative && amount < 0)
+    if(!relative && quantity < 0)
       errors.push(SetInventoryItemQuantityError.newQuantityCantBeNegative)
 
     if(errors.length){
@@ -46,15 +46,15 @@ export default class InventoryResolver {
     try{
       const filter = { ean }
       const update = relative
-        ? { $inc: { quantity: amount }}
-        : { $set: { quantity: amount } }
+        ? { $inc: { quantity }}
+        : { $set: { quantity } }
       const options = { new: true }
 
       const item = await Models.InventoryItemModel().findOneAndUpdate(filter, update, options)
 
       if(item.quantity < 0){
 
-        const undo = { $inc: { quantity: -amount } }
+        const undo = { $inc: { quantity: -quantity } }
 
         await Models.InventoryItemModel().findOneAndUpdate(filter, undo)
 
