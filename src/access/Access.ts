@@ -61,14 +61,13 @@ async function getAccessToken(session: string | Session | DocumentType<Session>)
 class AccessResolver {
 
   @Query(() => GetAccessTokenResponse)
-  async Access_getAccessToken(@Arg("sessionId") sessionId: string): Promise<GetAccessTokenResponse> {
+  async getAccessToken(@Arg("sessionId") sessionId: string): Promise<GetAccessTokenResponse> {
 
     return await getAccessToken(sessionId);
   }
 
   @Query(() => String)
-  Access_parseAccessToken(@Arg("accessToken") accessToken: string): string{
-
+  parseAccessToken(@Arg("accessToken") accessToken: string): string{
 
     return decrypt(accessToken, process.env.ACCESS_TOKEN_SECRET)
 

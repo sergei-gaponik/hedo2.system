@@ -2,7 +2,7 @@ import fetch from 'node-fetch'
 
 export async function sendSignal(collection: string, ids: string[]){
 
-  const url = `${process.env.SHOP_API_URL}/api`
+  const url = process.env.SHOP_API_ENDPOINT
 
   const options = {
     body: JSON.stringify({ collection, ids }),

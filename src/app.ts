@@ -14,12 +14,11 @@ import { cyan, bold, yellow, magenta} from 'colors/safe'
 import { dropAndPopulate } from './testing/MockProducer'
 import { setContext } from '@sergei-gaponik/hedo2.lib.models'
 import getApolloOptions from './core/getApolloOptions'
-import { PRODUCTION } from './core/const'
+import { PRODUCTION, VERSION } from './core/const'
 
 async function main() {
 
-  console.log(bold(magenta("SYSTEM API\n")))
-
+  console.log(`${bold(magenta("SYSTEM API"))} v${VERSION}\n`)
   console.log(`env: ${PRODUCTION ? bold(cyan("PRODUCTION")) : bold(yellow("DEVELOPMENT"))}`)
 
   const { MONGODB_MAIN, PORT, HOST } = process.env
@@ -67,7 +66,7 @@ async function main() {
 
   sslApp.listen(PORT, () => {
     console.log(`\napp running on ${cyan(`https://${HOST}:${PORT}`)}`)
-    console.log(`graphql endpoint ${cyan(`https://${HOST}:${PORT}/graphql`)}`)
+    console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/graphql`)}`)
 
   })
 }
