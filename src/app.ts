@@ -9,13 +9,20 @@ import { createClient } from 'redis'
 import * as path from 'path'
 import * as https from 'https'
 import * as fs from 'fs'
+import { cyan, bold, yellow, magenta} from 'colors/safe'
 
 import { dropAndPopulate } from './testing/MockProducer'
 import { setContext } from '@sergei-gaponik/hedo2.lib.models'
 import getApolloOptions from './core/getApolloOptions'
-import { MONGODB_MAIN, PORT, PRODUCTION } from './core/const'
+import { PRODUCTION } from './core/const'
 
 async function main() {
+
+  console.log(bold(magenta("SYSTEM API\n")))
+
+  console.log(`env: ${PRODUCTION ? bold(cyan("PRODUCTION")) : bold(yellow("DEVELOPMENT"))}`)
+
+  const { MONGODB_MAIN, PORT, HOST } = process.env
 
   console.log("connecting to mongodb...")
 
@@ -37,10 +44,14 @@ async function main() {
     env: process.env
   })
 
-  // dropAndPopulate()
-  // return;
+  if(!PRODUCTION && process.argv.includes("mdebug")) 
+    Mongoose.set('debug', true);
 
-  if(!PRODUCTION) Mongoose.set('debug', true);
+  if(!PRODUCTION && process.argv.includes("populate")){
+    dropAndPopulate()
+    return;
+  }
+
   console.log("initializing graphql...")
 
   const apolloOptions = await getApolloOptions()
@@ -54,7 +65,11 @@ async function main() {
     cert: fs.readFileSync(path.join(__dirname, '../.ssl/localhost.pem'))
   }, app)
 
-  sslApp.listen(PORT, () => console.log(`app running on port ${PORT}`))
+  sslApp.listen(PORT, () => {
+    console.log(`\napp running on ${cyan(`https://${HOST}:${PORT}`)}`)
+    console.log(`graphql endpoint ${cyan(`https://${HOST}:${PORT}/graphql`)}`)
+
+  })
 }
 
 main()

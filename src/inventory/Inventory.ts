@@ -5,7 +5,8 @@ import updateVariants from "./updateVariants"
 enum SetInventoryItemQuantityError {
   databaseError,
   newQuantityCantBeNegative,
-  tooManyArguments
+  tooManyArguments,
+  internalServerError
 }
 
 registerEnumType(SetInventoryItemQuantityError, { name: "SetInventoryItemQuantityError" })
@@ -22,10 +23,10 @@ class SetInventoryItemQuantityResponse {
 }
 
 @Resolver()
-export default class InventoryResolver {
+class InventoryResolver {
 
   @Mutation(() => SetInventoryItemQuantityResponse)
-  async setInventoryItemQuantity(
+  async Inventory_setInventoryItemQuantity(
     @Arg("relative", { 
       nullable: true, 
       description: "if set to true new quantity will be calculated relative to old" 
@@ -73,9 +74,13 @@ export default class InventoryResolver {
       }
     }
     catch(e){
-      response.errors = [ SetInventoryItemQuantityError.databaseError ]
+      response.errors = [ SetInventoryItemQuantityError.internalServerError ]
     }
 
     return response;
   }
+}
+
+export {
+  InventoryResolver
 }

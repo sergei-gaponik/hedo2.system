@@ -1,10 +1,13 @@
 import { buildSchema } from 'type-graphql'
 import { ObjectId } from 'mongodb'
 import ObjectIdScalar from './ObjectIdScalar'
-import InventoryResolver from '../inventory/Inventory'
+import { InventoryResolver } from '../inventory/Inventory'
+import { StripeResolver } from '../payments/Stripe'
+import { CartResolver } from '../orders/Cart'
+import { AccessResolver } from '../access/Access'
 import * as path from 'path'
 import { PRODUCTION } from './const'
-import { AssetResolver, I18nResolver, InventoryItemResolver, OrderResolver, PaymentResolver, ProductResolver, SessionResolver, UserResolver, VariantResolver } from '@sergei-gaponik/hedo2.lib.models'
+import { AssetResolver, I18nResolver, InventoryItemResolver, LineItemResolver, OrderResolver, PaymentResolver, ProductResolver, SessionResolver, UserResolver, VariantResolver } from '@sergei-gaponik/hedo2.lib.models'
 
 
 export default async () => ({
@@ -20,7 +23,9 @@ export default async () => ({
       UserResolver,
       OrderResolver,
       PaymentResolver,
-      
+      AccessResolver,
+      LineItemResolver,
+      CartResolver
     ],
     emitSchemaFile: path.resolve(__dirname, "../../schema.gql"),
     scalarsMap: [

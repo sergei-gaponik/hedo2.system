@@ -11,7 +11,8 @@
       "esnext.asynciterable"
     ],
     "paths": {
-      "@sergei-gaponik/hedo2.lib.models": [ "../_lib/models" ]
+      "@sergei-gaponik/hedo2.lib.models": [ "../_lib/models" ],
+      "@sergei-gaponik/hedo2.lib.util": [ "../_lib/util" ]
     }
   },
   "include": [ "./src/*" ],
