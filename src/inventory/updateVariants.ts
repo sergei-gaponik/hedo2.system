@@ -23,6 +23,6 @@ export default async function updateVariants(inventoryItemId = null){
     }
 
     variant.availableQuantity = available
-    variant.save()
+    await variant.save()
   }
 }

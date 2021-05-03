@@ -1,4 +1,4 @@
-import { Arg, Field, Mutation, ObjectType, Resolver, registerEnumType, InputType, ArgsType, Args } from "type-graphql"
+import { Field, Mutation, ObjectType, Resolver, registerEnumType, InputType, ArgsType, Args } from "type-graphql"
 import { LineItemInput, VariantTotalInput, LineItem, SessionModel, LineItemModel, Variant, VariantModel, Session, LineItemStatus } from '@sergei-gaponik/hedo2.lib.models'
 import { getAccessToken } from '../access/Access'
 import { LINE_ITEM_EXPIRATION } from '../core/const'

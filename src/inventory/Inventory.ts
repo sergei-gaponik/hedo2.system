@@ -26,20 +26,20 @@ class SetInventoryItemQuantityResponse {
 class InventoryResolver {
 
   @Mutation(() => SetInventoryItemQuantityResponse)
-  async Inventory_setInventoryItemQuantity(
+  async setInventoryItemQuantity(
     @Arg("relative", { 
       nullable: true, 
       description: "if set to true new quantity will be calculated relative to old" 
     }) relative: boolean = false,
     @Arg("ean", { nullable: true }) ean: string,
-    @Arg("_id", { nullable: true }) _id: string,
+    @Arg("objectId", { nullable: true }) objectId: string,
     @Arg("quantity") quantity: number
   ): Promise<SetInventoryItemQuantityResponse> {
 
     let response = new SetInventoryItemQuantityResponse()
     let errors = []
 
-    if(ean && _id)
+    if(ean && objectId)
       errors.push(SetInventoryItemQuantityError.tooManyArguments)
 
     if(!relative && quantity < 0)
@@ -51,7 +51,7 @@ class InventoryResolver {
     }
 
     try{
-      const filter = ean ? { ean } : { _id }
+      const filter = ean ? { ean } : { _id: objectId }
       const update = relative
         ? { $inc: { availableQuantity: quantity }}
         : { $set: { availableQuantity: quantity } }
@@ -68,7 +68,7 @@ class InventoryResolver {
         response.errors = [ SetInventoryItemQuantityError.newQuantityCantBeNegative ]
       }
       else {
-        updateVariants(item._id)
+        await updateVariants(item._id)
 
         response.updatedQuantity = item.availableQuantity
       }
