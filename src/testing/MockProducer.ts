@@ -1,6 +1,7 @@
 import * as Models from '@sergei-gaponik/hedo2.lib.models'
 import { CountryCode, CurrencyCode, LanguageCode, OrderStatus, PaymentMethod, PaymentProvider, PaymentStatus } from '@sergei-gaponik/hedo2.lib.models'
 import * as faker from 'faker'
+import { handleize } from '../../../_lib/util/dist/app'
 
 const randInt = i => Math.floor(10000 * Math.random()) % i
 
@@ -58,8 +59,14 @@ async function createDummyProducts(amount: number){
 
   for(let i = 0; i < amount; i++){
 
+    const name = faker.commerce.productName()
+    const series = faker.commerce.color()
+
     dummies.push({
-      title: faker.commerce.productName(),
+      name,
+      brand: faker.commerce.productMaterial(),
+      series,
+      handle: handleize(series + "-" + name),
       description: faker.commerce.productDescription(),
       variants: getRandomReferences(variants, 3, 1),
       images: getRandomReferences(assets, 3, 1)
