@@ -3,3 +3,4 @@ dist
 .env
 schema.gql
 .ssl
+*.rdb
