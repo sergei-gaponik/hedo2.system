@@ -1,6 +1,6 @@
 import { Arg, Field, Mutation, ObjectType, Resolver, registerEnumType, Query, InputType } from "type-graphql"
 import { Regional, RegionalInput, Session, SessionModel, SessionInput } from '@sergei-gaponik/hedo2.lib.models'
-import { encrypt, decrypt } from '@sergei-gaponik/hedo2.lib.util'
+import { encrypt, decrypt, log } from '@sergei-gaponik/hedo2.lib.util'
 import { DocumentType } from "@typegoose/typegoose"
 import { ACCESS_TOKEN_EXPIRATION, SESSION_EXPIRATION } from "../core/const"
 
@@ -91,7 +91,11 @@ class AccessResolver {
     session.end = Date.now() + SESSION_EXPIRATION
     await session.save()
 
-    return await getAccessToken(session);
+    const _r = await getAccessToken(session)
+
+    log({ ..._r, sessionId }, { tags: [ "sessions", "getAccessToken" ] })
+
+    return _r
   }
 
   @Query(() => String)
@@ -121,12 +125,13 @@ class AccessResolver {
 
     const accessTokenResponse = await getAccessToken(session);
 
-    if(accessTokenResponse.errors){
+    if(accessTokenResponse.errors)
       response.errors = [ InitSessionError.internalServerError ]
-      return response;
-    }
-
-    response.accessToken = accessTokenResponse.accessToken
+    else
+      response.accessToken = accessTokenResponse.accessToken
+    
+    log({ ...response, sessionInput }, { tags: [ "sessions", "initSession" ] })
+    
     return response;
   }
 

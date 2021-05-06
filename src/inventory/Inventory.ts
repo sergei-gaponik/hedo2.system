@@ -1,6 +1,7 @@
 import { Arg, Field, Mutation, ObjectType, Resolver, registerEnumType } from "type-graphql"
 import { InventoryItemModel } from '@sergei-gaponik/hedo2.lib.models'
 import updateVariants from "./updateVariants"
+import { log } from '@sergei-gaponik/hedo2.lib.util'
 
 enum SetInventoryItemQuantityError {
   databaseError,
@@ -76,6 +77,8 @@ class InventoryResolver {
     catch(e){
       response.errors = [ SetInventoryItemQuantityError.internalServerError ]
     }
+
+    log({ ean, objectId, quantity, response }, { tags: [ "inventory", "setInventoryItemQuantity" ] })
 
     return response;
   }

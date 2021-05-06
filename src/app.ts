@@ -10,6 +10,7 @@ import * as path from 'path'
 import * as https from 'https'
 import * as fs from 'fs'
 import { cyan, bold, yellow, magenta} from 'colors/safe'
+import { setLoggerContext } from '@sergei-gaponik/hedo2.lib.util'
 
 import { dropAndPopulate } from './testing/MockProducer'
 import { setContext } from '@sergei-gaponik/hedo2.lib.models'
@@ -28,7 +29,8 @@ async function main() {
   const mongooseOptions = {
     useNewUrlParser: true,
     useUnifiedTopology: true,
-    autoIndex: false
+    autoIndex: false,
+    useFindAndModify: false
   }
 
   const mongoose = await Mongoose.connect(MONGODB_MAIN, mongooseOptions)
@@ -42,6 +44,8 @@ async function main() {
     redisClient,
     env: process.env
   })
+
+  setLoggerContext(process.env.ANALYSIS_ENDPOINT, process.env.LOGGER_SECRET, "system")
 
   if(!PRODUCTION && process.argv.includes("mdebug")) 
     Mongoose.set('debug', true);
