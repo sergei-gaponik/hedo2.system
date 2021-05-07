@@ -1,8 +1,8 @@
 import { Field, Mutation, ObjectType, Resolver, registerEnumType, InputType, ArgsType, Args } from "type-graphql"
-import { LineItemInput, VariantTotalInput, LineItem, SessionModel, LineItemModel, Variant, VariantModel, Session, LineItemStatus } from '@sergei-gaponik/hedo2.lib.models'
+import { LineItemInput, VariantTotalInput, LineItem, SessionModel, LineItemModel, Variant, VariantModel, Session, LineItemStatus, LineItemTotalInput } from '@sergei-gaponik/hedo2.lib.models'
 import { getAccessToken } from '../access/Access'
 import { LINE_ITEM_EXPIRATION } from '../core/const'
-import { log } from '@sergei-gaponik/hedo2.lib.util'
+import { log, decrypt } from '@sergei-gaponik/hedo2.lib.util'
 
 
 //#region Errors
@@ -54,16 +54,6 @@ class AddToCartResponse {
 //#endregion
 
 //#region Args
-
-@InputType()
-class LineItemTotalInput{
-  
-  @Field({ description: "ObjectId" })
-  lineItem: string
-  
-  @Field()
-  quantity: number
-}
 
 @ArgsType()
 class UpdateCartArgs {
@@ -273,14 +263,15 @@ class CartResolver {
           
           if(currentLineItem){
   
-            if(currentLineItem.expiration > Date.now()){
+            if(currentLineItem.expiration < Date.now()){
   
               const quantity = variantQuantity + currentLineItem.quantity
   
               await currentLineItem.remove()
-  
+              
               const { _id } = await createLineItem(variant, session, quantity)
-              session.lineItems = session.lineItems.filter(a => a != currentLineItem._id)
+              session.lineItems = session.lineItems.filter(a => a.toString() != currentLineItem._id)
+
               session.lineItems.push(_id)
   
               updateSessionFlag = true;
@@ -301,10 +292,14 @@ class CartResolver {
   
         if(updateSessionFlag){
   
-          await session.save()
+          const r = await session.save()
+
+          console.log({ r, session })
   
           const accessTokenResponse = await getAccessToken(session)
   
+          console.log(decrypt(accessTokenResponse.accessToken, process.env.ACCESS_TOKEN_SECRET))
+
           if(accessTokenResponse.errors){
             response.errors = [ AddToCartError.cantGetAccessToken ]
             return response;
