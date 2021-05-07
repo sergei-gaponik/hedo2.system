@@ -70,7 +70,7 @@ async function main() {
 
   sslApp.listen(PORT, () => {
     console.log(`\napp running on ${cyan(`https://${HOST}:${PORT}`)}`)
-    console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/graphql`)}`)
+    console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/graphql`)}\n`)
 
   })
 }
