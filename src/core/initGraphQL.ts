@@ -10,6 +10,8 @@ import { PRODUCTION } from './const'
 import { AssetResolver, I18nResolver, InventoryItemResolver, LineItemResolver, OrderResolver, PaymentResolver, ProductResolver, SessionResolver, UserResolver, VariantResolver } from '@sergei-gaponik/hedo2.lib.models'
 import { FastifyInstance } from 'fastify'
 import mercurius from 'mercurius'
+import { crc, log } from '@sergei-gaponik/hedo2.lib.util'
+import { performance } from 'perf_hooks'
 
 export default async (app: FastifyInstance) => {
 
@@ -40,6 +42,41 @@ export default async (app: FastifyInstance) => {
 
   app.register(mercurius, {
     schema,
-    graphiql: true
+    graphiql: !PRODUCTION,
+   // jit: 1,
+    context: req => ({
+      ...req,
+      ts: performance.now()
+    })
   })
+  
+  await app.ready()
+
+  app.graphql.addHook("onResolution", async (execution, context: any) => {
+
+    const data = execution.data
+    
+    let errors = context.errors || []
+
+    if(execution.errors)
+      errors = errors.concat(execution.errors.map(e => e.message))
+
+    if(data && data.errors)
+      errors = errors.concat(data.errors)
+
+    const dataProps = data ? Object.getOwnPropertyNames(data) : null
+
+    const _log = { 
+      time: performance.now() - context.ts, 
+      errors, 
+      dataProps,
+      query: context.body.query, 
+      checksum: crc(context.body.query),
+      status: context.reply.raw.statusCode
+    }
+
+    log(_log, { tags: [ "gql" ] })
+
+  })
+
 }

@@ -9,7 +9,7 @@ import * as https from 'https'
 import * as fs from 'fs'
 import { cyan, bold, yellow, magenta} from 'colors/safe'
 import { setLoggerContext } from '@sergei-gaponik/hedo2.lib.util'
-import Fastify from 'fastify'
+import fastify from 'fastify'
 
 import { dropAndPopulate } from './testing/MockProducer'
 import { setContext } from '@sergei-gaponik/hedo2.lib.models'
@@ -56,10 +56,10 @@ async function main() {
 
   console.log("initializing graphql server...")
 
-  const app = Fastify({
+  const app = fastify({
     https: {
-      key: fs.readFileSync(path.join(__dirname, '../.ssl/localhost-key.pem')),
-      cert: fs.readFileSync(path.join(__dirname, '../.ssl/localhost.pem'))
+      key: fs.readFileSync(path.join(__dirname, '../.ssl/key.pem')),
+      cert: fs.readFileSync(path.join(__dirname, '../.ssl/cert.pem'))
     }
   })
 
@@ -67,7 +67,10 @@ async function main() {
 
   app.listen(PORT, () => {
     console.log(`\napp running on ${cyan(`https://${HOST}:${PORT}`)}`)
-    console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/graphql`)}\n`)
+    console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/graphql`)}`)
+    
+    if(!PRODUCTION)
+    console.log(`graphql playground ${cyan(`https://${HOST}:${PORT}/graphiql`)}\n`)
 
   })
 }
