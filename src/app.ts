@@ -5,7 +5,6 @@ require("dotenv").config()
 import * as Mongoose from 'mongoose'
 import { createClient } from 'redis'
 import * as path from 'path'
-import * as https from 'https'
 import * as fs from 'fs'
 import { cyan, bold, yellow, magenta} from 'colors/safe'
 import { setLoggerContext } from '@sergei-gaponik/hedo2.lib.util'
@@ -38,12 +37,7 @@ async function main() {
 
   const redisClient = createClient()
 
-  setContext({ 
-    mongoose,
-    redisClient,
-    env: process.env
-  })
-
+  setContext({ mongoose, redisClient, env: process.env })
   setLoggerContext(process.env.LOGGER_ENDPOINT, process.env.LOGGER_SECRET, "system")
 
   if(!PRODUCTION && process.argv.includes("mdebug")) 
@@ -70,8 +64,7 @@ async function main() {
     console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/graphql`)}`)
     
     if(!PRODUCTION)
-    console.log(`graphql playground ${cyan(`https://${HOST}:${PORT}/graphiql`)}\n`)
-
+      console.log(`graphql playground ${cyan(`https://${HOST}:${PORT}/graphiql`)}\n`)
   })
 }
 

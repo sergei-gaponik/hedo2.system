@@ -7,11 +7,12 @@ import { CartResolver } from '../orders/Cart'
 import { AccessResolver } from '../access/Access'
 import * as path from 'path'
 import { PRODUCTION } from './const'
-import { AssetResolver, I18nResolver, InventoryItemResolver, LineItemResolver, OrderResolver, PaymentResolver, ProductResolver, SessionResolver, UserResolver, VariantResolver } from '@sergei-gaponik/hedo2.lib.models'
+import { AssetResolver, I18nResolver, InventoryItemResolver, ProductPropertyResolver, LineItemResolver, OrderResolver, PaymentResolver, ProductResolver, ProductPropertyCategoryResolver, SessionResolver, UserResolver, VariantResolver, ProductKeywordResolver, ProductIngredientResolver, BrandResolver, SeriesResolver } from '@sergei-gaponik/hedo2.lib.models'
 import { FastifyInstance } from 'fastify'
 import mercurius from 'mercurius'
 import { crc, log } from '@sergei-gaponik/hedo2.lib.util'
 import { performance } from 'perf_hooks'
+import fastifyCors from 'fastify-cors';
 
 export default async (app: FastifyInstance) => {
 
@@ -22,6 +23,10 @@ export default async (app: FastifyInstance) => {
       VariantResolver,
       AssetResolver,
       ProductResolver,
+      ProductPropertyResolver,
+      ProductPropertyCategoryResolver,
+      ProductKeywordResolver,
+      ProductIngredientResolver,
       I18nResolver,
       SessionResolver,
       UserResolver,
@@ -29,7 +34,9 @@ export default async (app: FastifyInstance) => {
       PaymentResolver,
       AccessResolver,
       LineItemResolver,
-      CartResolver
+      CartResolver,
+      BrandResolver,
+      SeriesResolver
     ],
     emitSchemaFile: path.resolve(__dirname, "../../schema.gql"),
     scalarsMap: [
@@ -40,10 +47,11 @@ export default async (app: FastifyInstance) => {
     ],
   })
 
+  app.register(fastifyCors);
+
   app.register(mercurius, {
     schema,
     graphiql: !PRODUCTION,
-   // jit: 1,
     context: req => ({
       ...req,
       ts: performance.now()
@@ -65,18 +73,18 @@ export default async (app: FastifyInstance) => {
       errors = errors.concat(data.errors)
 
     const dataProps = data ? Object.getOwnPropertyNames(data) : null
+    const ok = !errors.length && context.reply.raw.statusCode < 400
 
     const _log = { 
-      time: performance.now() - context.ts, 
-      errors, 
+      ok,
+      errors: JSON.stringify(errors), 
+      execTime: performance.now() - context.ts, 
       dataProps,
       query: context.body.query, 
-      checksum: crc(context.body.query),
-      status: context.reply.raw.statusCode
+      checksum: crc(context.body.query)
     }
 
-    log(_log, { tags: [ "gql" ] })
-
+    log(_log, { index: "logs_system_gql", silent: PRODUCTION })
   })
 
 }

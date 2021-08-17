@@ -1,9 +1,11 @@
 import { VariantModel, getReferences, InventoryItemModel } from '@sergei-gaponik/hedo2.lib.models'
-
+import { sendSignal } from '../core/signal'
 
 export default async function updateVariants(inventoryItemId = null){
 
   const variantIds = await getReferences(InventoryItemModel, VariantModel, [inventoryItemId])
+
+  let signalIds = []
 
   for(const variantId of variantIds){
     
@@ -23,6 +25,11 @@ export default async function updateVariants(inventoryItemId = null){
     }
 
     variant.availableQuantity = available
+
+    if(available <= 0) signalIds.push(variant._id)
+
     await variant.save()
   }
+
+  sendSignal("variants", signalIds)
 }

@@ -1,9 +1,13 @@
 import * as Models from '@sergei-gaponik/hedo2.lib.models'
 import { CountryCode, CurrencyCode, LanguageCode, OrderStatus, PaymentMethod, PaymentProvider, PaymentStatus } from '@sergei-gaponik/hedo2.lib.models'
 import * as faker from 'faker'
-import { handleize } from '../../../_lib/util/dist/app'
+import { handleize } from '@sergei-gaponik/hedo2.lib.util'
 
 const randInt = i => Math.floor(10000 * Math.random()) % i
+
+const randRange = (min, max) => [ ...Array(randInt(max - min) + min).keys() ]
+
+const shuffle = arr => [ ...arr.sort(() => 0.5 - Math.random()) ]
 
 const getRandomFromList = list => list[randInt(list.length - 1)]
 
@@ -54,6 +58,8 @@ async function createDummyProducts(amount: number){
 
   const variants = await Models.VariantModel().find({}, {_id: 1})
   const assets = await Models.AssetModel().find({}, {_id: 1})
+  const productProperties = await Models.ProductPropertyModel().find({}, {_id: 1})
+  const shuffledProductProperties = shuffle(productProperties)
 
   console.log({variants, assets})
 
@@ -69,7 +75,11 @@ async function createDummyProducts(amount: number){
       handle: handleize(series + "-" + name),
       description: faker.commerce.productDescription(),
       variants: getRandomReferences(variants, 3, 1),
-      images: getRandomReferences(assets, 3, 1)
+      images: getRandomReferences(assets, 3, 1),
+      properties: [0,1,2,3,4].map(i => ({
+        value: randInt(2) % 2 ? "true" : "false",
+        property: productProperties[i]._id
+      }))
     })
   }
   const r = await Models.ProductModel().insertMany(dummies)
@@ -225,6 +235,25 @@ async function createDummyLineItems(amount: number){
   console.log(r)
 }
 
+async function createDummyProductProperties(amount){
+
+  let dummies = []
+
+  for(let i = 0; i < amount; i++){
+
+    dummies.push({
+      type: null,
+      dataType: "boolean",
+      name: faker.commerce.productAdjective(),
+      description: faker.commerce.productDescription()
+    })
+  }
+
+  const r = await Models.ProductPropertyModel().insertMany(dummies)
+}
+
+
+
 async function createDummyOrders(amount: number){
 
   let dummies = []
@@ -252,7 +281,7 @@ async function createDummyOrders(amount: number){
 }
 
 /**
- * drops all collections from database and populates with random data
+ * drops collections from database and populates with random data
  */
 async function dropAndPopulate(){
 
@@ -265,7 +294,9 @@ async function dropAndPopulate(){
   await Models.SessionModel().deleteMany({})
   await Models.PaymentModel().deleteMany({})
   await Models.OrderModel().deleteMany({})
+  //await Models.ProductPropertyModel().deleteMany({})
 
+  //await createDummyProductProperties(20)
   await createDummyInventoryItems(1000)
   await createDummyAssets(500)
   await createDummyVariants(800)

@@ -121,16 +121,17 @@ class AccessResolver {
     
     const session = await SessionModel().create(sessionInput as Session)
 
-    console.log(session)
-
     const accessTokenResponse = await getAccessToken(session);
 
     if(accessTokenResponse.errors)
       response.errors = [ InitSessionError.internalServerError ]
     else
       response.accessToken = accessTokenResponse.accessToken
-    
-    log({ ...response, sessionInput }, { tags: [ "sessions", "initSession" ] })
+
+    const errors = response.errors
+    const ok = !response.errors?.length
+
+    log({ errors, ok, sessionInput }, { tags: [ "sessions", "initSession" ] })
     
     return response;
   }
