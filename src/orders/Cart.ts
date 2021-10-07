@@ -1,329 +1,307 @@
-import { Field, Mutation, ObjectType, Resolver, registerEnumType, InputType, ArgsType, Args } from "type-graphql"
-import { LineItemInput, VariantTotalInput, LineItem, SessionModel, LineItemModel, Variant, VariantModel, Session, LineItemStatus, LineItemTotalInput } from '@sergei-gaponik/hedo2.lib.models'
-import { getAccessToken } from '../access/Access'
-import { LINE_ITEM_EXPIRATION } from '../core/const'
-import { log, decrypt } from '@sergei-gaponik/hedo2.lib.util'
+// DEPRECATED
 
 
-//#region Errors
-enum UpdateCartError {
-  internalServerError,
-  lineItemsNotUnique,
-  sessionNotFound,
-  cantGetAccessToken,
-  quantityNotAvailable,
-  lineItemNotFound,
-  variantNotFound
-}
+// import { Field, Mutation, ObjectType, Resolver, registerEnumType, InputType, ArgsType, Args } from "type-graphql"
+// import { LineItemInput, VariantTotalInput, LineItem, SessionModel, LineItemModel, Variant, VariantModel, Session, LineItemStatus, LineItemTotalInput } from '@sergei-gaponik/hedo2.lib.models'
+// import { getAccessToken } from '../access/Access'
+// import { LINE_ITEM_EXPIRATION } from '../core/const'
+// import { log, decrypt } from '@sergei-gaponik/hedo2.lib.util'
+// import { errors } from "@typegoose/typegoose"
 
-enum AddToCartError {
-  internalServerError,
-  variantsNotUnique,
-  sessionNotFound,
-  cantGetAccessToken,
-  quantityNotAvailable,
-  variantNotFound
-}
 
-registerEnumType(UpdateCartError, { name: "UpdateCartError" })
-registerEnumType(AddToCartError, { name: "AddToCartError" })
+// //#region Errors
+// enum UpdateCartError {
+//   internalServerError,
+//   lineItemsNotUnique,
+//   sessionNotFound,
+//   cantGetAccessToken,
+//   quantityNotAvailable,
+//   lineItemNotFound,
+//   variantNotFound
+// }
 
-//#endregion
+// enum AddToCartError {
+//   internalServerError,
+//   variantsNotUnique,
+//   sessionNotFound,
+//   cantGetAccessToken,
+//   quantityNotAvailable,
+//   variantNotFound
+// }
 
-//#region Responses
+// registerEnumType(UpdateCartError, { name: "UpdateCartError" })
+// registerEnumType(AddToCartError, { name: "AddToCartError" })
 
-@ObjectType()
-class UpdateCartResponse {
+// //#endregion
 
-  @Field({ nullable: true })
-  public accessToken?: string
+// //#region Responses
 
-  @Field(() => [UpdateCartError], { nullable: true })
-  public errors?: UpdateCartError[]
-}
+// @ObjectType()
+// class UpdateCartResponse {
 
-@ObjectType()
-class AddToCartResponse {
+//   @Field({ nullable: true })
+//   public accessToken?: string
 
-  @Field({ nullable: true })
-  public accessToken?: string
+//   @Field(() => [UpdateCartError], { nullable: true })
+//   public errors?: UpdateCartError[]
+// }
 
-  @Field(() => [AddToCartError], { nullable: true })
-  public errors?: AddToCartError[]
-}
-//#endregion
+// @ObjectType()
+// class AddToCartResponse {
 
-//#region Args
+//   @Field({ nullable: true })
+//   public accessToken?: string
 
-@ArgsType()
-class UpdateCartArgs {
+//   @Field(() => [AddToCartError], { nullable: true })
+//   public errors?: AddToCartError[]
+// }
+// //#endregion
+
+// //#region Args
+
+// @ArgsType()
+// class UpdateCartArgs {
   
-  @Field(() => [LineItemTotalInput])
-  public lineItemTotals: LineItemTotalInput[]
+//   @Field(() => [LineItemTotalInput])
+//   public lineItemTotals: LineItemTotalInput[]
   
-  @Field()
-  public sessionId: string
-}
+//   @Field()
+//   public sessionId: string
+// }
 
-@ArgsType()
-class AddToCartArgs {
-  @Field(() => [VariantTotalInput])
-  public variantTotals: VariantTotalInput[]
+// @ArgsType()
+// class AddToCartArgs {
+//   @Field(() => [VariantTotalInput])
+//   public variantTotals: VariantTotalInput[]
   
-  @Field()
-  public sessionId: string
-}
+//   @Field()
+//   public sessionId: string
+// }
 
-//#endregion
+// //#endregion
 
-async function createLineItem(variant: Variant, session: Session, quantity: number){
+// async function createLineItem(variant: Variant, session: Session, quantity: number, productId: string){
 
-  const lineItem: LineItemInput = {
-    status: LineItemStatus.cart,
-    session: session._id,
-    variant: variant._id,
-    quantity: quantity,
-    title: variant.title,
-    image: variant.images[0] as string,
-    expiration: Date.now() + LINE_ITEM_EXPIRATION
-  }
+//   const lineItem: LineItemInput = {
+//     status: LineItemStatus.cart,
+//     session: session._id,
+//     variant: variant._id,
+//     product: productId,
+//     price: variant.price,
+//     quantity: quantity,
+//     title: variant.title,
+//     image: variant.images[0] as string,
+//     expiration: Date.now() + LINE_ITEM_EXPIRATION
+//   }
 
-  return await LineItemModel().create(lineItem as LineItem)
+//   return await LineItemModel().create(lineItem as LineItem)
 
-}
+// }
 
-@Resolver()
-class CartResolver {
+// @Resolver()
+// class CartResolver {
 
 
-  //#region UpdateCart
+//   //#region UpdateCart
 
-  @Mutation(() => UpdateCartResponse)
-  async updateCart(
-    @Args() { lineItemTotals, sessionId }: UpdateCartArgs
-  ): Promise<UpdateCartResponse> {
+//   @Mutation(() => UpdateCartResponse)
+//   async updateCart(
+//     @Args() { lineItemTotals, sessionId }: UpdateCartArgs
+//   ): Promise<UpdateCartResponse> {
 
-    const _r = await (async () => {
+//     const _r = await (async () => {
 
-      let response = new UpdateCartResponse()
+//       if(new Set(lineItemTotals.map(a => a.lineItem)).size != lineItemTotals.length)
+//         return { errors: [ UpdateCartError.lineItemsNotUnique ] };
 
-      if(new Set(lineItemTotals.map(a => a.lineItem)).size != lineItemTotals.length){
+//       try{
+//         const session = await SessionModel().findById(sessionId)
 
-        response.errors = [ UpdateCartError.lineItemsNotUnique ]
-        return response;
-      }
+//         if(!session)
+//           return { errors: [ UpdateCartError.sessionNotFound ] }
 
-      try{
-        const session = await SessionModel().findById(sessionId)
-
-        if(!session){
-          response.errors = [ UpdateCartError.sessionNotFound ]
-          return response;
-        }
-
-        if(lineItemTotals.some(a => !session.lineItems.find(b => b.toString() == a.lineItem))){
-          response.errors = [ UpdateCartError.lineItemNotFound ]
-          return response;
-        }
+//         if(lineItemTotals.some(a => !session.lineItems.find(b => b.toString() == a.lineItem)))
+//           return { errors: [ UpdateCartError.lineItemNotFound ] }
         
-        const currentLineItems = await LineItemModel().find({ _id: { $in: session.lineItems as string[] }})
-        const variants = await VariantModel().find({ _id: { $in: currentLineItems.map(a => a.variant) as string[] }})
+//         const currentLineItems = await LineItemModel().find({ _id: { $in: session.lineItems as string[] }})
+//         const variants = await VariantModel().find({ _id: { $in: currentLineItems.map(a => a.variant) as string[] }})
 
-        for(const lineItemTotal of lineItemTotals){
+//         for(const lineItemTotal of lineItemTotals){
 
-          const lineItem = currentLineItems.find(a => a._id == lineItemTotal.lineItem)
-          const variant = variants.find(a => a._id == lineItem.variant.toString())
+//           const lineItem = currentLineItems.find(a => a._id == lineItemTotal.lineItem)
+//           const variant = variants.find(a => a._id == lineItem.variant.toString())
 
-          if(!variant){
-            response.errors = [ UpdateCartError.variantNotFound ]
-            return response;
-          }
+//           if(!variant)
+//             return { errors: [ UpdateCartError.lineItemNotFound ]}
 
-          if(variant.availableQuantity < lineItemTotal.quantity){
-            response.errors = [ UpdateCartError.quantityNotAvailable ]
-            return response;
-          }
-        }
+//           if(variant.availableQuantity < lineItemTotal.quantity)
+//             return { errors: [ UpdateCartError.quantityNotAvailable ] }
+//         }
       
-        let updateSessionFlag = false
+//         let updateSessionFlag = false
 
-        for(const lineItemTotal of lineItemTotals){
+//         for(const lineItemTotal of lineItemTotals){
 
-          const lineItem = currentLineItems.find(a => a._id == lineItemTotal.lineItem)
-          const variant = variants.find(a => a._id == lineItem.variant.toString())
+//           console.log(lineItemTotal)
 
-          if(lineItemTotal.quantity <= 0){
+//           const lineItem = currentLineItems.find(a => a._id == lineItemTotal.lineItem)
+//           const variant = variants.find(a => a._id == lineItem.variant.toString())
+
+//           if(lineItemTotal.quantity <= 0){
             
-            session.lineItems = session.lineItems.filter(a => a.toString() != lineItem._id)
+//             session.lineItems = session.lineItems.filter(a => a.toString() != lineItem._id)
 
-            await lineItem.remove()
+//             await lineItem.remove()
 
-            updateSessionFlag = true
-          }
-          else if(lineItem.expiration > Date.now()){
+//             updateSessionFlag = true
+//           }
+//           else if(lineItem.expiration > Date.now()){
             
-            const { _id } = await createLineItem(variant, session, lineItemTotal.quantity)
+//             const { _id } = await createLineItem(variant, session, lineItemTotal.quantity, lineItem.product.toString())
 
-            session.lineItems = session.lineItems.filter(a => a.toString() != lineItem._id)
-            session.lineItems.push(_id)
+//             session.lineItems = session.lineItems.filter(a => a.toString() != lineItem._id)
+//             session.lineItems.push(_id)
 
-            updateSessionFlag = true
-          }
-          else{
+//             updateSessionFlag = true
+//           }
+//           else{
 
-            lineItem.quantity = lineItemTotal.quantity
-            await lineItem.save()
-          }
-        }
+//             lineItem.quantity = lineItemTotal.quantity
+//             await lineItem.save()
+//           }
+//         }
 
-        if(updateSessionFlag){
+//         if(updateSessionFlag){
           
-          await session.save()
+//           await session.save()
           
-          const accessTokenResponse = await getAccessToken(session)
+//           const r = await getAccessToken(session)
     
-          if(accessTokenResponse.errors){
-            response.errors = [ UpdateCartError.cantGetAccessToken ]
-            return response;
-          }
+//           if(r.errors)
+//             return { errors: [ UpdateCartError.cantGetAccessToken ] }
     
-          response.accessToken = accessTokenResponse.accessToken
-        }
-      }
-      catch(e){
-        response.errors = [ UpdateCartError.internalServerError ]
-      }
+//           return { accessToken: r.accessToken }
+//         }
 
-      return response;
+//         return {}
+//       }
+//       catch(e){
+//         return { errors: [ UpdateCartError.internalServerError ] }
+//       }
       
-    })()
+//     })()
 
-    log({ ..._r, lineItemTotals, sessionId }, { tags: [ "cart", "updateCart" ] })
+//     log({ ..._r, lineItemTotals, sessionId }, { tags: [ "cart", "updateCart" ] })
 
-    return _r
-  }
-  //#endregion
+//     return _r
+//   }
+//   //#endregion
   
-  //#region AddToCart
+//   //#region AddToCart
 
-  @Mutation(() => AddToCartResponse)
-  async addToCart(
-    @Args() { variantTotals, sessionId }: AddToCartArgs
-  ): Promise<AddToCartResponse> {
+//   @Mutation(() => AddToCartResponse)
+//   async addToCart(
+//     @Args() { variantTotals, sessionId }: AddToCartArgs
+//   ): Promise<AddToCartResponse> {
 
-    const _r = await (async () => {
+//     const _r = await (async () => {
 
-      let response = new AddToCartResponse()
+//       if(new Set(variantTotals.map(a => a.variant)).size != variantTotals.length)
+//         return { errors: [ AddToCartError.variantsNotUnique ]}
   
-      if(new Set(variantTotals.map(a => a.variant)).size != variantTotals.length){
+//       try{
   
-        response.errors = [ AddToCartError.variantsNotUnique ]
-        return response;
-      }
+//         const session = await SessionModel().findById(sessionId)
   
-      try{
+//         if(!session)
+//           return { errors: [ AddToCartError.sessionNotFound ] };
   
-        const session = await SessionModel().findById(sessionId)
+//         const [ currentLineItems, variants ] = await Promise.all([
   
-        if(!session){
-          response.errors = [ AddToCartError.sessionNotFound ]
-          return response;
-        }
+//           ( async () => await LineItemModel().find({ _id: { $in: session.lineItems as string[] }}))(),
+//           ( async () => await VariantModel().find({ _id: { $in: variantTotals.map(a => a.variant) }}))()
+//         ])
   
-        const [ currentLineItems, variants ] = await Promise.all([
-  
-          ( async () => await LineItemModel().find({ _id: { $in: session.lineItems as string[] }}))(),
-          ( async () => await VariantModel().find({ _id: { $in: variantTotals.map(a => a.variant) }}))()
-        ])
-  
-        if(variantTotals.length != variants.length){
-          response.errors = [ AddToCartError.variantNotFound ]
-          return response;
-        }
-  
+//         if(variantTotals.length != variants.length)
+//           return { errors: [ AddToCartError.variantNotFound ] }
         
-        for(const variant of variants){
+//         for(const variant of variants){
+
+//           const currentLineItem = currentLineItems.find(a => a.variant.toString() == variant._id.toString())
+//           const variantQuantity = variantTotals.find(a => a.variant.toString() == variant._id.toString()).quantity
+//           const currentQuantity = currentLineItem?.quantity || 0
           
-          const currentLineItem = currentLineItems.find(a => a.variant.toString() == variant._id.toString())
-          const variantQuantity = variantTotals.find(a => a.variant.toString() == variant._id.toString()).quantity
-          const currentQuantity = currentLineItem?.quantity || 0
-          
-          if(variant.availableQuantity < variantQuantity + currentQuantity){
-            response.errors = [ AddToCartError.quantityNotAvailable ]
-            return response;
-          }
-        }
+//           if(variant.availableQuantity < variantQuantity + currentQuantity)
+//             return { errors:  [ AddToCartError.quantityNotAvailable ] }
+//         }
         
-        let updateSessionFlag = false
+//         let updateSessionFlag = false
         
-        for(const variant of variants){
+//         for(const variant of variants){
+
+//           const _variantTotal = variantTotals.find(a => a.variant.toString() == variant._id.toString())
   
-          const currentLineItem = currentLineItems.find(a => a.variant.toString() == variant._id.toString())
-          const variantQuantity = variantTotals.find(a => a.variant.toString() == variant._id.toString()).quantity
-          
-          if(currentLineItem){
+//           const currentLineItem = currentLineItems.find(a => a.variant.toString() == variant._id.toString())
+//           const variantQuantity = _variantTotal.quantity
+//           const product = _variantTotal.product
+
+//           if(currentLineItem){
   
-            if(currentLineItem.expiration < Date.now()){
+//             if(currentLineItem.expiration < Date.now()){
   
-              const quantity = variantQuantity + currentLineItem.quantity
+//               const quantity = variantQuantity + currentLineItem.quantity
   
-              await currentLineItem.remove()
+//               await currentLineItem.remove()
               
-              const { _id } = await createLineItem(variant, session, quantity)
-              session.lineItems = session.lineItems.filter(a => a.toString() != currentLineItem._id)
+//               const { _id } = await createLineItem(variant, session, quantity, product)
+//               session.lineItems = session.lineItems.filter(a => a.toString() != currentLineItem._id)
 
-              session.lineItems.push(_id)
+//               session.lineItems.push(_id)
   
-              updateSessionFlag = true;
-            }
-            else{
-              currentLineItem.quantity += variantQuantity
-              await currentLineItem.save()
-            }
-          }
-          else{
-            const { _id } = await createLineItem(variant, session, variantQuantity)
-            session.lineItems.push(_id)
+//               updateSessionFlag = true;
+//             }
+//             else{
+//               currentLineItem.quantity += variantQuantity
+//               await currentLineItem.save()
+//             }
+//           }
+//           else{
+//             const { _id } = await createLineItem(variant, session, variantQuantity, product)
+//             session.lineItems.push(_id)
   
-            updateSessionFlag = true;
-          }
+//             updateSessionFlag = true;
+//           }
   
-        }
+//         }
   
-        if(updateSessionFlag){
+//         if(updateSessionFlag){
   
-          const r = await session.save()
+//           const r = await session.save()
 
-          console.log({ r, session })
+//           const accessTokenResponse = await getAccessToken(session)
   
-          const accessTokenResponse = await getAccessToken(session)
+//           if(accessTokenResponse.errors)
+//             return { errors: [ AddToCartError.cantGetAccessToken ] } 
   
-          console.log(decrypt(accessTokenResponse.accessToken, process.env.ACCESS_TOKEN_SECRET))
+//           return { accessToken: accessTokenResponse.accessToken }
+//         }
 
-          if(accessTokenResponse.errors){
-            response.errors = [ AddToCartError.cantGetAccessToken ]
-            return response;
-          }
-  
-          response.accessToken = accessTokenResponse.accessToken
-        }
-      }
-      catch(e){
-        console.log(e)
-        response.errors = [ AddToCartError.internalServerError ]
-      }
-  
-      return response;
+//         return {}
+//       }
+//       catch(e){
+//         console.log(e)
+//         return { errors: [ AddToCartError.internalServerError ] }
+//       }
 
-    })()
+//     })()
 
-    log({ ..._r, variantTotals, sessionId }, { tags: [ "cart", "addToCart" ] })
+//     log({ ..._r, variantTotals, sessionId }, { tags: [ "cart", "addToCart" ] })
 
-    return _r
-  }
-  //#endregion
-}
+//     return _r
+//   }
+//   //#endregion
+// }
 
-export {
-  CartResolver
-}
+// export {
+//   CartResolver
+// }

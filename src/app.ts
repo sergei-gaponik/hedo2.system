@@ -59,7 +59,7 @@ async function main() {
 
   await initGraphQL(app)
 
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`\napp running on ${cyan(`https://${HOST}:${PORT}`)}`)
     console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/graphql`)}`)
     

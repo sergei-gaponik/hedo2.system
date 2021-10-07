@@ -4,13 +4,6 @@ import { encrypt, decrypt, log } from '@sergei-gaponik/hedo2.lib.util'
 import { DocumentType } from "@typegoose/typegoose"
 import { ACCESS_TOKEN_EXPIRATION, SESSION_EXPIRATION } from "../core/const"
 
-@InputType()
-class InitSessionInput {
-
-  @Field(() => RegionalInput, { nullable: true })
-  regional: RegionalInput
-}
-
 enum GetAccessTokenError {
   internalServerError,
   sessionNotFound
@@ -105,31 +98,32 @@ class AccessResolver {
   }
 
   @Mutation(() => InitSessionResponse)
-  async initSession(@Arg("initSessionInput") initSessionInput: InitSessionInput): Promise<InitSessionResponse> {
+  async initSession(@Arg("sessionInput") sessionInput: SessionInput): Promise<InitSessionResponse> {
 
     let response = new InitSessionResponse()
 
     const start = Date.now()
 
-    const sessionInput = {
-      regional: initSessionInput.regional as Regional || null,
+    let _sessionInput = {
+      regional: null,
       lineItems: [],
       start: start,
       end: start + SESSION_EXPIRATION,
       user: null
     } as SessionInput
+
+    _sessionInput = { ..._sessionInput, ...sessionInput }
     
-    const session = await SessionModel().create(sessionInput as Session)
+    const session = await SessionModel().create(_sessionInput as Session)
 
-    const accessTokenResponse = await getAccessToken(session);
+    const { errors, accessToken } = await getAccessToken(session);
 
-    if(accessTokenResponse.errors)
+    const ok = !response.errors?.length
+
+    if(!ok)
       response.errors = [ InitSessionError.internalServerError ]
     else
-      response.accessToken = accessTokenResponse.accessToken
-
-    const errors = response.errors
-    const ok = !response.errors?.length
+      response.accessToken = accessToken
 
     log({ errors, ok, sessionInput }, { tags: [ "sessions", "initSession" ] })
     

@@ -57,11 +57,10 @@ async function createDummyProducts(amount: number){
   let dummies = []
 
   const variants = await Models.VariantModel().find({}, {_id: 1})
-  const assets = await Models.AssetModel().find({}, {_id: 1})
   const productProperties = await Models.ProductPropertyModel().find({}, {_id: 1})
   const shuffledProductProperties = shuffle(productProperties)
 
-  console.log({variants, assets})
+  console.log({variants})
 
   for(let i = 0; i < amount; i++){
 
@@ -75,7 +74,6 @@ async function createDummyProducts(amount: number){
       handle: handleize(series + "-" + name),
       description: faker.commerce.productDescription(),
       variants: getRandomReferences(variants, 3, 1),
-      images: getRandomReferences(assets, 3, 1),
       properties: [0,1,2,3,4].map(i => ({
         value: randInt(2) % 2 ? "true" : "false",
         property: productProperties[i]._id
@@ -91,14 +89,12 @@ async function createDummyVariants(amount: number){
   let dummies = []
 
   const inventoryItems = await Models.InventoryItemModel().find({}, {_id: 1})
-  const assets = await Models.AssetModel().find({}, {_id: 1})
 
   for(let i = 0; i < amount; i++){
 
     dummies.push({
       title: `variant ${i}`,
       items: getInventoryItemTotals(inventoryItems, 3),
-      images: getRandomReferences(assets, 3),
       availableQuantity: randInt(10)
     })
     
@@ -126,24 +122,6 @@ async function createDummyInventoryItems(amount: number){
 
 }
 
-async function createDummyAssets(amount: number){
-
-  let dummies = []
-
-  for(let i = 0; i < amount; i++){
-
-    const types = Object.keys(Models.MIMEType)
-    const type = types[i % types.length]
-
-    dummies.push({
-      src: faker.image.imageUrl(),
-      type
-    })
-  }
-
-  const r = await Models.AssetModel().insertMany(dummies)
-  
-}
 
 async function createDummyUsers(amount: number){
 
@@ -213,7 +191,6 @@ async function createDummyLineItems(amount: number){
 
   const inventoryItems = await Models.InventoryItemModel().find({}, {_id: 1})
   const variants = await Models.VariantModel().find({}, {_id: 1})
-  const assets = await Models.AssetModel().find({}, {_id: 1})
   
   for(let i = 0; i < amount; i++){
     const p = getRandomPrice()
@@ -224,7 +201,6 @@ async function createDummyLineItems(amount: number){
       priceWithoutTaxes: p / 1.19,
       title: faker.commerce.productName(),
       variant: getRandomReference(variants),
-      image: getRandomReference(assets),
       quantity: randInt(3) + 1
     })
   }
@@ -286,7 +262,6 @@ async function createDummyOrders(amount: number){
 async function dropAndPopulate(){
 
   await Models.InventoryItemModel().deleteMany({})
-  await Models.AssetModel().deleteMany({})
   await Models.VariantModel().deleteMany({})
   await Models.ProductModel().deleteMany({})
   await Models.LineItemModel().deleteMany({})
@@ -298,7 +273,6 @@ async function dropAndPopulate(){
 
   //await createDummyProductProperties(20)
   await createDummyInventoryItems(1000)
-  await createDummyAssets(500)
   await createDummyVariants(800)
   await createDummyProducts(600)
   await createDummyLineItems(100)
