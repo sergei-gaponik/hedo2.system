@@ -1,12 +1,9 @@
 import { buildSchema } from 'type-graphql'
 import { ObjectId } from 'mongodb'
 import ObjectIdScalar from './ObjectIdScalar'
-import { InventoryResolver } from '../inventory/Inventory'
-import { StripeResolver } from '../payments/Stripe'
-import { AccessResolver } from '../access/Access'
 import * as path from 'path'
 import { PRODUCTION } from './const'
-import { PageResolver, ArticleResolver, ProductCategoryResolver, I18nResolver, InventoryItemResolver, ProductPropertyResolver, LineItemResolver, OrderResolver, PaymentResolver, ProductResolver, ProductPropertyCategoryResolver, SessionResolver, UserResolver, VariantResolver, ProductKeywordResolver, ProductIngredientResolver, BrandResolver, SeriesResolver } from '@sergei-gaponik/hedo2.lib.models'
+import { PageResolver, ShippingMethodResolver, ArticleResolver, ProductCategoryResolver, I18nResolver, InventoryItemResolver, ProductPropertyResolver, OrderResolver, ProductResolver, ProductPropertyCategoryResolver, UserResolver, VariantResolver, ProductKeywordResolver, ProductIngredientResolver, BrandResolver, SeriesResolver } from '@sergei-gaponik/hedo2.lib.models'
 import { FastifyInstance } from 'fastify'
 import mercurius from 'mercurius'
 import { crc, log } from '@sergei-gaponik/hedo2.lib.util'
@@ -19,7 +16,6 @@ export default async (app: FastifyInstance) => {
     resolvers: [
       PageResolver,
       ArticleResolver,
-      InventoryResolver, 
       InventoryItemResolver,
       VariantResolver,
       ProductResolver,
@@ -29,14 +25,11 @@ export default async (app: FastifyInstance) => {
       ProductKeywordResolver,
       ProductIngredientResolver,
       I18nResolver,
-      SessionResolver,
       UserResolver,
       OrderResolver,
-      PaymentResolver,
-      AccessResolver,
-      LineItemResolver,
       BrandResolver,
-      SeriesResolver
+      SeriesResolver,
+      ShippingMethodResolver
     ],
     emitSchemaFile: path.resolve(__dirname, "../../schema.gql"),
     scalarsMap: [

@@ -1,5 +1,5 @@
 import * as Models from '@sergei-gaponik/hedo2.lib.models'
-import { CountryCode, CurrencyCode, LanguageCode, OrderStatus, PaymentMethod, PaymentProvider, PaymentStatus } from '@sergei-gaponik/hedo2.lib.models'
+import { CountryCode, CurrencyCode, LanguageCode, OrderStatus, PaymentMethod } from '@sergei-gaponik/hedo2.lib.models'
 import * as faker from 'faker'
 import { handleize } from '@sergei-gaponik/hedo2.lib.util'
 
@@ -143,74 +143,6 @@ async function createDummyUsers(amount: number){
   
 }
 
-async function createDummySessions(amount: number){
-
-  let dummies = []
-
-  const users = await Models.UserModel().find({}, {_id: 1})
-  const lineItems = await Models.LineItemModel().find({}, {_id: 1})
-
-
-  for(let i = 0; i < amount; i++){
-
-    dummies.push({
-      regional: getRegional(),
-      start: Date.now() - randInt(100000),
-      end: Date.now() + randInt(100000),
-      user: getRandomReference(users),
-      lineItems: getRandomReferences(lineItems, 3)
-    })
-  }
-
-  const r = await Models.SessionModel().insertMany(dummies)
-  
-}
-
-async function createDummyPayments(amount: number){
-
-  let dummies = []
-
-  const users = await Models.PaymentModel().find({}, {_id: 1})
-
-  for(let i = 0; i < amount; i++){
-
-    dummies.push({
-      paymentProvider: getRandomFromList(Object.values(PaymentProvider)),
-      paymentMethod: getRandomFromList(Object.values(PaymentMethod)),
-      status: getRandomFromList(Object.values(PaymentStatus)),
-    })
-  }
-
-  const r = await Models.PaymentModel().insertMany(dummies)
-  
-}
-
-async function createDummyLineItems(amount: number){
-
-  let dummies = []
-
-  const inventoryItems = await Models.InventoryItemModel().find({}, {_id: 1})
-  const variants = await Models.VariantModel().find({}, {_id: 1})
-  
-  for(let i = 0; i < amount; i++){
-    const p = getRandomPrice()
-    dummies.push({
-      items: getInventoryItemTotals(inventoryItems, 3),
-      price: p,
-      compareToPrice: randInt(3) == 1 ? p + 5 : p,
-      priceWithoutTaxes: p / 1.19,
-      title: faker.commerce.productName(),
-      variant: getRandomReference(variants),
-      quantity: randInt(3) + 1
-    })
-  }
-
-  const r = await Models.LineItemModel().insertMany(dummies)
-
-
-  console.log(r)
-}
-
 async function createDummyProductProperties(amount){
 
   let dummies = []
@@ -228,34 +160,6 @@ async function createDummyProductProperties(amount){
   const r = await Models.ProductPropertyModel().insertMany(dummies)
 }
 
-
-
-async function createDummyOrders(amount: number){
-
-  let dummies = []
-
-  const sessions = await Models.SessionModel().find({}, {_id: 1})
-  const payments = await Models.PaymentModel().find({}, {_id: 1})
-  //const shipments = await Models.ShipmentModel().find({}, {_id: 1})
-  const lineItems = await Models.LineItemModel().find({}, {_id: 1})
-  
-
-
-  for(let i = 0; i < amount; i++){
-
-    dummies.push({
-      status: getRandomFromList(Object.values(OrderStatus)),
-      session: getRandomReference(sessions),
-      payments: getRandomReferences(payments, 1, 1),
-      lineItems: getRandomReferences(lineItems, 3, 1),
-      total: getRandomPrice()
-    })
-  }
-
-  const r = await Models.OrderModel().insertMany(dummies)
-  
-}
-
 /**
  * drops collections from database and populates with random data
  */
@@ -264,10 +168,7 @@ async function dropAndPopulate(){
   await Models.InventoryItemModel().deleteMany({})
   await Models.VariantModel().deleteMany({})
   await Models.ProductModel().deleteMany({})
-  await Models.LineItemModel().deleteMany({})
   await Models.UserModel().deleteMany({})
-  await Models.SessionModel().deleteMany({})
-  await Models.PaymentModel().deleteMany({})
   await Models.OrderModel().deleteMany({})
   //await Models.ProductPropertyModel().deleteMany({})
 
@@ -275,11 +176,7 @@ async function dropAndPopulate(){
   await createDummyInventoryItems(1000)
   await createDummyVariants(800)
   await createDummyProducts(600)
-  await createDummyLineItems(100)
   await createDummyUsers(20)
-  await createDummySessions(100)
-  await createDummyPayments(300)
-  await createDummyOrders(300)
   await createDummyUsers(30)
 
   process.exit()
