@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb'
 import ObjectIdScalar from './ObjectIdScalar'
 import * as path from 'path'
 import { PRODUCTION } from './const'
-import { PageResolver, ShippingMethodResolver, ArticleResolver, ProductCategoryResolver, I18nResolver, InventoryItemResolver, ProductPropertyResolver, OrderResolver, ProductResolver, ProductPropertyCategoryResolver, UserResolver, VariantResolver, ProductKeywordResolver, ProductIngredientResolver, BrandResolver, SeriesResolver } from '@sergei-gaponik/hedo2.lib.models'
+import { PageResolver, ShippingMethodResolver, ProductImageResolver, ArticleResolver, ProductCategoryResolver, I18nResolver, ProductPropertyResolver, OrderResolver, ProductResolver, ProductPropertyCategoryResolver, UserResolver, VariantResolver, ProductKeywordResolver, ProductIngredientResolver, BrandResolver, SeriesResolver } from '@sergei-gaponik/hedo2.lib.models'
 import { FastifyInstance } from 'fastify'
 import mercurius from 'mercurius'
 import { crc, log } from '@sergei-gaponik/hedo2.lib.util'
@@ -16,13 +16,13 @@ export default async (app: FastifyInstance) => {
     resolvers: [
       PageResolver,
       ArticleResolver,
-      InventoryItemResolver,
       VariantResolver,
       ProductResolver,
       ProductPropertyResolver,
       ProductPropertyCategoryResolver,
       ProductCategoryResolver,
       ProductKeywordResolver,
+      ProductImageResolver,
       ProductIngredientResolver,
       I18nResolver,
       UserResolver,
