@@ -3,16 +3,17 @@ import { ObjectId } from 'mongodb'
 import ObjectIdScalar from './ObjectIdScalar'
 import * as path from 'path'
 import { PRODUCTION } from './const'
-import { PageResolver, ShippingMethodResolver, ProductImageResolver, ArticleResolver, ProductCategoryResolver, I18nResolver, ProductPropertyResolver, OrderResolver, ProductResolver, ProductPropertyCategoryResolver, UserResolver, VariantResolver, ProductKeywordResolver, ProductIngredientResolver, BrandResolver, SeriesResolver } from '@sergei-gaponik/hedo2.lib.models'
+import { PageResolver, ShippingMethodResolver, ProductImageResolver, ArticleResolver, ProductCategoryResolver, ProductPropertyResolver, OrderResolver, ProductResolver, ProductPropertyCategoryResolver, UserResolver, VariantResolver, ProductKeywordResolver, ProductIngredientResolver, BrandResolver, SeriesResolver } from '@sergei-gaponik/hedo2.lib.models'
 import { FastifyInstance } from 'fastify'
 import mercurius from 'mercurius'
-import { crc, log } from '@sergei-gaponik/hedo2.lib.util'
+import { crc } from '@sergei-gaponik/hedo2.lib.util'
 import { performance } from 'perf_hooks'
 import fastifyCors from 'fastify-cors';
 
 export default async (app: FastifyInstance) => {
 
   const schema = await buildSchema({ 
+    nullableByDefault: true,
     resolvers: [
       PageResolver,
       ArticleResolver,
@@ -24,7 +25,6 @@ export default async (app: FastifyInstance) => {
       ProductKeywordResolver,
       ProductImageResolver,
       ProductIngredientResolver,
-      I18nResolver,
       UserResolver,
       OrderResolver,
       BrandResolver,
@@ -65,19 +65,22 @@ export default async (app: FastifyInstance) => {
     if(data && data.errors)
       errors = errors.concat(data.errors)
 
-    const dataProps = data ? Object.getOwnPropertyNames(data) : null
-    const ok = !errors.length && context.reply.raw.statusCode < 400
-
-    const _log = { 
-      ok,
-      errors: JSON.stringify(errors), 
-      execTime: performance.now() - context.ts, 
-      dataProps,
-      query: context.body.query, 
-      checksum: crc(context.body.query)
+    let _log: any = { 
+      execTime: Math.round((performance.now() - context.ts) * 100) / 100, 
+      query: context.body.query.trim().slice(0,50),
+      crc: crc(context.body.query + context.body.variables)
     }
 
-    log(_log, { index: "logs_system_gql", silent: PRODUCTION })
+    if(errors?.length)
+      _log.errors = errors
+
+    const properties = Object.getOwnPropertyNames(data)
+
+    if(properties.length && Array.isArray(data[properties[0]])){
+      _log.items = data[properties[0]].length
+    }
+
+    console.log(_log)
   })
 
 }

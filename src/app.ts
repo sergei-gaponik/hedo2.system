@@ -3,19 +3,21 @@ require("reflect-metadata")
 require("dotenv").config()
 
 import * as Mongoose from 'mongoose'
-import { createClient } from 'redis'
+import { MongoClient } from 'mongodb'
 import * as path from 'path'
 import * as fs from 'fs'
 import { cyan, bold, yellow, magenta} from 'colors/safe'
-import { setLoggerContext } from '@sergei-gaponik/hedo2.lib.util'
+import { initConsole } from '@sergei-gaponik/hedo2.lib.util'
 import fastify from 'fastify'
-
-import { dropAndPopulate } from './testing/MockProducer'
 import { setContext } from '@sergei-gaponik/hedo2.lib.models'
+import { setSystemContext } from './core/systemContext'
 import initGraphQL from './core/initGraphQL'
 import { PRODUCTION, VERSION } from './core/const'
+import scheduler from './core/scheduler'
 
 async function main() {
+
+  initConsole(console)
 
   console.log(`${bold(magenta("SYSTEM API"))} v${VERSION}\n`)
   console.log(`env: ${PRODUCTION ? bold(cyan("PRODUCTION")) : bold(yellow("DEVELOPMENT"))}`)
@@ -24,29 +26,24 @@ async function main() {
 
   console.log("connecting to mongodb...")
 
-  const mongooseOptions = {
+
+  const mongoose = await Mongoose.connect(MONGODB_MAIN, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     autoIndex: false,
     useFindAndModify: false
-  }
+  })
 
-  const mongoose = await Mongoose.connect(MONGODB_MAIN, mongooseOptions)
+  const mongoDB = await MongoClient.connect(MONGODB_MAIN, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  }).then(client => client.db());
 
-  console.log("connecting to redis...")
-
-  const redisClient = createClient()
-
-  setContext({ mongoose, redisClient, env: process.env })
-  setLoggerContext(process.env.LOGGER_ENDPOINT, process.env.LOGGER_SECRET, "system")
+  setContext({ mongoose, env: process.env })
+  setSystemContext({ mongoDB })
 
   if(!PRODUCTION && process.argv.includes("mdebug")) 
     Mongoose.set('debug', true);
-
-  if(!PRODUCTION && process.argv.includes("populate")){
-    dropAndPopulate()
-    return;
-  }
 
   console.log("initializing graphql server...")
 
@@ -59,8 +56,12 @@ async function main() {
 
   await initGraphQL(app)
 
+  console.log("initializing scheduler...")
+
+  scheduler()
+
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\napp running on ${cyan(`https://${HOST}:${PORT}`)}`)
+    console.log(`app running on ${cyan(`https://${HOST}:${PORT}`)}`)
     console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/graphql`)}`)
     
     if(!PRODUCTION)
