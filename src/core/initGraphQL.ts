@@ -3,7 +3,7 @@ import { ObjectId } from 'mongodb'
 import ObjectIdScalar from './ObjectIdScalar'
 import * as path from 'path'
 import { PRODUCTION } from './const'
-import { PageResolver, ShippingMethodResolver, ProductImageResolver, ArticleResolver, ProductCategoryResolver, ProductPropertyResolver, OrderResolver, ProductResolver, ProductPropertyCategoryResolver, UserResolver, VariantResolver, ProductKeywordResolver, ProductIngredientResolver, BrandResolver, SeriesResolver } from '@sergei-gaponik/hedo2.lib.models'
+import * as models from '@sergei-gaponik/hedo2.lib.models'
 import { FastifyInstance } from 'fastify'
 import mercurius from 'mercurius'
 import { crc } from '@sergei-gaponik/hedo2.lib.util'
@@ -15,21 +15,24 @@ export default async (app: FastifyInstance) => {
   const schema = await buildSchema({ 
     nullableByDefault: true,
     resolvers: [
-      PageResolver,
-      ArticleResolver,
-      VariantResolver,
-      ProductResolver,
-      ProductPropertyResolver,
-      ProductPropertyCategoryResolver,
-      ProductCategoryResolver,
-      ProductKeywordResolver,
-      ProductImageResolver,
-      ProductIngredientResolver,
-      UserResolver,
-      OrderResolver,
-      BrandResolver,
-      SeriesResolver,
-      ShippingMethodResolver
+      models.PageResolver,
+      models.ArticleResolver,
+      models.VariantResolver,
+      models.ProductResolver,
+      models.ProductPropertyResolver,
+      models.ProductPropertyCategoryResolver,
+      models.ProductCategoryResolver,
+      models.ProductKeywordResolver,
+      models.ProductImageResolver,
+      models.ProductIngredientResolver,
+      models.UserResolver,
+      models.OrderResolver,
+      models.BrandResolver,
+      models.SeriesResolver,
+      models.ShippingMethodResolver,
+      models.CustomPageResolver,
+      models.FrontPageSectionResolver,
+      models.BannerResolver
     ],
     emitSchemaFile: path.resolve(__dirname, "../../schema.gql"),
     scalarsMap: [

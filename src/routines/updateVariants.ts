@@ -37,7 +37,7 @@ export default async function updateVariants(){
   const nModified = responses.filter(a => a.data?.nModified).map(a => a.data.nModified)
   const errors = responses.filter(a => a.errors?.length).map(a => a.errors)
 
-  if(nModified.length && !errors.length){
+  if(!errors.length){
     await context().mongoDB.collection("pulls").insertOne({
       entity: "variants",
       updated: Date.now()
