@@ -4,3 +4,4 @@ dist
 schema.gql
 .ssl
 *.rdb
+package.dev.json

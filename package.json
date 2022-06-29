@@ -1,6 +1,6 @@
 {
   "name": "hedo2.system",
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "",
   "main": "src/app.ts",
   "scripts": {
@@ -16,6 +16,8 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@graphql-tools/merge": "6.2.10",
+    "@sergei-gaponik/hedo2.lib.models": "git+https://sergei-gaponik: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@github.com/sergei-gaponik/hedo2.lib.models",
+    "@sergei-gaponik/hedo2.lib.util": "git+https://sergei-gaponik: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@github.com/sergei-gaponik/hedo2.lib.util",
     "@typegoose/typegoose": "^7.6.0",
     "colors": "^1.4.0",
     "crc32": "^0.2.2",
@@ -26,6 +28,7 @@
     "graphql": "15.5.0",
     "mercurius": "^7.6.1",
     "module-alias": "^2.2.2",
+    "mongodb": "3.6.3",
     "mongoose": "5.10.18",
     "node-fetch": "^2.6.1",
     "node-schedule": "^2.1.0",
@@ -42,9 +45,5 @@
     "@types/redis": "^2.8.28",
     "@types/stripe": "^8.0.417",
     "ts-node": "^9.1.1"
-  },
-  "_moduleAliases": {
-    "@sergei-gaponik/hedo2.lib.models": "../_lib/models/dist/app.js",
-    "@sergei-gaponik/hedo2.lib.util": "../_lib/util/dist/app.js"
   }
 }

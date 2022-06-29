@@ -1,6 +1,7 @@
-require("module-alias/register")
 require("reflect-metadata")
 require("dotenv").config()
+
+// require("module-alias/register")
 
 import * as Mongoose from 'mongoose'
 import { MongoClient } from 'mongodb'
