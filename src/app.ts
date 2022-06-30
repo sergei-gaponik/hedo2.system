@@ -1,7 +1,11 @@
 require("reflect-metadata")
-require("dotenv").config()
 
-// require("module-alias/register")
+import { PRODUCTION, VERSION } from './core/const'
+
+if(!PRODUCTION){
+  require("dotenv").config()
+  // require("module-alias/register")
+}
 
 import * as Mongoose from 'mongoose'
 import { MongoClient } from 'mongodb'
@@ -13,7 +17,6 @@ import fastify from 'fastify'
 import { setContext } from '@sergei-gaponik/hedo2.lib.models'
 import { setSystemContext } from './core/systemContext'
 import initGraphQL from './core/initGraphQL'
-import { PRODUCTION, VERSION } from './core/const'
 import scheduler from './core/scheduler'
 
 async function main() {

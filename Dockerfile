@@ -1,7 +1,13 @@
-from node:16
+FROM node:16 AS appbuild
+WORKDIR /usr/src/app
+COPY package.json ./
+RUN npm install
+RUN npm install -g typescript@4.3.5
+COPY . .
+RUN tsc --skipLibCheck
 
-workdir /usr/src/app
+FROM node:16-alpine
+WORKDIR /usr/src/app
+COPY --from=appbuild /usr/src/app .
 
-copy . .
-
-cmd [ "node", "./dist/app.js" ]
+CMD [ "node", "./dist/app.js" ]

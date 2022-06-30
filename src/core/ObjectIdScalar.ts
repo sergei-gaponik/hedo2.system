@@ -8,7 +8,7 @@ export default new GraphQLScalarType({
     if (!(value instanceof ObjectId)) {
       throw new Error("ObjectIdScalar can only serialize ObjectId values");
     }
-    return value.toHexString();
+    return (value as any).toHexString();
   },
   parseValue(value: unknown): ObjectId {
     if (typeof value !== "string") {
