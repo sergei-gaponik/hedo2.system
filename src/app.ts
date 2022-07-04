@@ -51,12 +51,14 @@ async function main() {
 
   console.log("initializing graphql server...")
 
-  const app = fastify({
-    https: {
-      key: fs.readFileSync(path.join(__dirname, '../.ssl/key.pem')),
-      cert: fs.readFileSync(path.join(__dirname, '../.ssl/cert.pem'))
-    }
-  })
+  // const app = fastify({
+  //   https: {
+  //     key: fs.readFileSync(path.join(__dirname, '../.ssl/key.pem')),
+  //     cert: fs.readFileSync(path.join(__dirname, '../.ssl/cert.pem'))
+  //   }
+  // })
+
+  const app = fastify()
 
   await initGraphQL(app)
 
@@ -65,11 +67,11 @@ async function main() {
   scheduler()
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`app running on ${cyan(`https://${HOST}:${PORT}`)}`)
-    console.log(`api endpoint ${cyan(`https://${HOST}:${PORT}/graphql`)}`)
+    console.log(`app running on ${cyan(`http://${HOST}:${PORT}`)}`)
+    console.log(`api endpoint ${cyan(`http://${HOST}:${PORT}/graphql`)}`)
     
     if(!PRODUCTION)
-      console.log(`graphql playground ${cyan(`https://${HOST}:${PORT}/graphiql`)}\n`)
+      console.log(`graphql playground ${cyan(`http://${HOST}:${PORT}/graphiql`)}\n`)
   })
 }
 
